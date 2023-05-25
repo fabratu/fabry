@@ -50,23 +50,4 @@ struct gather_nonroot_icb {
 void initiate_blocking(gather_root_icb &b);
 void initiate_blocking(gather_nonroot_icb &b);
 
-struct reduce_root_icb {
-	communicator *com;
-	opaque_handle dtype;
-	int n;
-	const void *in;
-	void *out;
-};
-
-struct reduce_nonroot_icb {
-	communicator *com;
-	opaque_handle dtype;
-	int rrk;
-	int n;
-	const void *in;
-};
-
-opaque_handle initiate_nonblocking(reduce_root_icb &b);
-opaque_handle initiate_nonblocking(reduce_nonroot_icb &b);
-
 } // namespace fabry::internal

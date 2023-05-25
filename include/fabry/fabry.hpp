@@ -51,7 +51,7 @@ struct communicator {
 	}
 
 	communicator();
-
+	
 	communicator(world_tag);
 
 	explicit communicator(opaque_handle p);
@@ -86,7 +86,7 @@ struct communicator {
 	inline internal::barrier_icb barrier(no_root_tag) {
 		return {this};
 	}
-
+	
 	template<typename T>
 	inline internal::bcast_root_icb bcast(this_root_tag, const T *in, int n) {
 		return {this, get_type<T>(), n, in};
@@ -127,16 +127,6 @@ struct communicator {
 		return {this, get_type<T>(), root.rk, 1, in};
 	}
 
-	template<typename T>
-	inline internal::reduce_root_icb reduce(this_root_tag, const T *in, int n, T *out) {
-		return {this, get_type<T>(), n, in, out};
-	}
-
-	template<typename T>
-	inline internal::reduce_nonroot_icb reduce(other_root_tag root, const T *in, int n) {
-		return {this, get_type<T>(), root.rk, n, in};
-	}
-
 private:
 	opaque_handle p_;
 	int rank_;
@@ -158,7 +148,7 @@ struct passive_rdma_base {
 	explicit passive_rdma_base(no_root_tag, communicator &com, size_t unit, size_t size);
 
 	passive_rdma_base(const passive_rdma_base &) = delete;
-
+	
 	passive_rdma_base(passive_rdma_base &&other)
 	: passive_rdma_base() {
 		swap(*this, other);
