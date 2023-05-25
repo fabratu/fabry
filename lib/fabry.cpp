@@ -104,6 +104,22 @@ namespace internal {
 				nullptr, 0, lift<MPI_Datatype>(b.dtype), b.rrk,
 				lift<MPI_Comm>(b.com->get_handle()));
 	}
+
+	opaque_handle initiate_nonblocking(reduce_root_icb &b) {
+		MPI_Request req;
+		MPI_Ireduce(const_cast<void *>(b.in), b.out, b.n,
+				lift<MPI_Datatype>(b.dtype), MPI_SUM, b.com->rank(),
+				lift<MPI_Comm>(b.com->get_handle()), &req);
+		return decay(req);
+	}
+
+	opaque_handle initiate_nonblocking(reduce_nonroot_icb &b) {
+		MPI_Request req;
+		MPI_Ireduce(b.in, nullptr, b.n,
+				lift<MPI_Datatype>(b.dtype), MPI_SUM, b.rrk,
+				lift<MPI_Comm>(b.com->get_handle()), &req);
+		return decay(req);
+	}
 }
 
 passive_rdma_base::passive_rdma_base()
