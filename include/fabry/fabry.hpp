@@ -48,6 +48,8 @@ static constexpr world_tag world;
 struct communicator {
 	friend void swap(communicator &x, communicator &y) {
 		std::swap(x.p_, y.p_);
+		std::swap(x.rank_, y.rank_);
+		std::swap(x.n_ranks_, y.n_ranks_);
 	}
 
 	communicator();
@@ -62,6 +64,8 @@ struct communicator {
 	: communicator() {
 		swap(*this, other);
 	}
+
+	explicit operator bool ();
 
 	communicator &operator= (communicator other) {
 		swap(*this, other);
@@ -136,6 +140,10 @@ struct communicator {
 	inline internal::reduce_nonroot_icb reduce(other_root_tag root, const T *in, int n) {
 		return {this, get_type<T>(), root.rk, n, in};
 	}
+
+	communicator split_shared(no_root_tag);
+	communicator split_color(no_root_tag, int color);
+	communicator split_color(no_root_tag);
 
 private:
 	opaque_handle p_;
