@@ -38,31 +38,6 @@ communicator::communicator(world_tag)
 	MPI_Comm_size(lift<MPI_Comm>(p_), &n_ranks_);
 }
 
-communicator::operator bool () {
-	return lift<MPI_Comm>(p_) != MPI_COMM_NULL;
-}
-
-communicator communicator::split_shared(no_root_tag) {
-	MPI_Comm nc;
-	MPI_Comm_split_type(lift<MPI_Comm>(p_), MPI_COMM_TYPE_SHARED, rank_, MPI_INFO_NULL, &nc);
-	assert(nc != MPI_COMM_NULL);
-	return communicator{decay(nc)};
-}
-
-communicator communicator::split_color(no_root_tag, int color) {
-	MPI_Comm nc;
-	MPI_Comm_split(lift<MPI_Comm>(p_), color, rank_, &nc);
-	assert(nc != MPI_COMM_NULL);
-	return communicator{decay(nc)};
-}
-
-communicator communicator::split_color(no_root_tag) {
-	MPI_Comm nc;
-	MPI_Comm_split(lift<MPI_Comm>(p_), MPI_UNDEFINED, rank_, &nc);
-	assert(nc == MPI_COMM_NULL);
-	return communicator{};
-}
-
 bool pollable::poll(opaque_handle h) {
 	assert(s_ == stage::in_progress);
 	MPI_Request req = lift<MPI_Request>(h);
