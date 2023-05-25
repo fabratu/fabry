@@ -66,6 +66,17 @@ struct reduce_nonroot_icb {
 	const void *in;
 };
 
+struct all_reduce_icb {
+	communicator *com;
+	opaque_handle dtype;
+	int n;
+	const void *in;
+	void *out;
+};
+
+void initiate_blocking(reduce_root_icb &b);
+void initiate_blocking(reduce_nonroot_icb &b);
+void initiate_blocking(all_reduce_icb &b);
 opaque_handle initiate_nonblocking(reduce_root_icb &b);
 opaque_handle initiate_nonblocking(reduce_nonroot_icb &b);
 
