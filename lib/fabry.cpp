@@ -38,6 +38,31 @@ communicator::communicator(world_tag)
 	MPI_Comm_size(lift<MPI_Comm>(p_), &n_ranks_);
 }
 
+communicator::operator bool () {
+	return lift<MPI_Comm>(p_) != MPI_COMM_NULL;
+}
+
+communicator communicator::split_shared(no_root_tag) {
+	MPI_Comm nc;
+	MPI_Comm_split_type(lift<MPI_Comm>(p_), MPI_COMM_TYPE_SHARED, rank_, MPI_INFO_NULL, &nc);
+	assert(nc != MPI_COMM_NULL);
+	return communicator{decay(nc)};
+}
+
+communicator communicator::split_color(no_root_tag, int color) {
+	MPI_Comm nc;
+	MPI_Comm_split(lift<MPI_Comm>(p_), color, rank_, &nc);
+	assert(nc != MPI_COMM_NULL);
+	return communicator{decay(nc)};
+}
+
+communicator communicator::split_color(no_root_tag) {
+	MPI_Comm nc;
+	MPI_Comm_split(lift<MPI_Comm>(p_), MPI_UNDEFINED, rank_, &nc);
+	assert(nc == MPI_COMM_NULL);
+	return communicator{};
+}
+
 bool pollable::poll(opaque_handle h) {
 	assert(s_ == stage::in_progress);
 	MPI_Request req = lift<MPI_Request>(h);
@@ -105,6 +130,18 @@ namespace internal {
 				lift<MPI_Comm>(b.com->get_handle()));
 	}
 
+	void initiate_blocking(reduce_root_icb &b) {
+		MPI_Reduce(const_cast<void *>(b.in), b.out, b.n,
+				lift<MPI_Datatype>(b.dtype), MPI_SUM, b.com->rank(),
+				lift<MPI_Comm>(b.com->get_handle()));
+	}
+
+	void initiate_blocking(reduce_nonroot_icb &b) {
+		MPI_Reduce(b.in, nullptr, b.n,
+				lift<MPI_Datatype>(b.dtype), MPI_SUM, b.rrk,
+				lift<MPI_Comm>(b.com->get_handle()));
+	}
+
 	opaque_handle initiate_nonblocking(reduce_root_icb &b) {
 		MPI_Request req;
 		MPI_Ireduce(const_cast<void *>(b.in), b.out, b.n,
@@ -121,6 +158,65 @@ namespace internal {
 		return decay(req);
 	}
 }
+
+//---------------------------------------------------------------------------------------
+// Active RDMA.
+//---------------------------------------------------------------------------------------
+
+active_rdma_base::active_rdma_base()
+: p_{decay(MPI_WIN_NULL)}, size_{0}, mapping_{nullptr} { }
+
+active_rdma_base::active_rdma_base(no_root_tag, communicator &com, size_t unit, size_t size)
+: com_{&com}, size_{size} {
+	MPI_Win win;
+	MPI_Win_allocate(size * unit, unit, MPI_INFO_NULL,
+			lift<MPI_Comm>(com.get_handle()), &mapping_, &win);
+	p_ = decay(win);
+}
+
+active_rdma_base::~active_rdma_base() {
+	if(p_ != decay(MPI_WIN_NULL)) {
+		std::cerr << "fabry: ~active_rdma_base() called on live object" << std::endl;
+		abort();
+	}
+}
+
+void active_rdma_base::pre_fence(no_root_tag) {
+	MPI_Win_fence(MPI_MODE_NOPRECEDE, lift<MPI_Win>(p_));
+}
+
+void active_rdma_base::fence(no_root_tag) {
+	MPI_Win_fence(0, lift<MPI_Win>(p_));
+}
+
+void active_rdma_base::post_fence(no_root_tag) {
+	MPI_Win_fence(MPI_MODE_NOSUCCEED, lift<MPI_Win>(p_));
+}
+
+void active_rdma_base::dispose(no_root_tag) {
+	auto win = lift<MPI_Win>(p_);
+	MPI_Win_free(&win);
+	p_ = decay(MPI_WIN_NULL);
+}
+
+void active_rdma_base::do_get_sync(opaque_handle dtype, int rk, void *out) {
+	MPI_Get(out, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
+}
+
+void active_rdma_base::do_put_sync(opaque_handle dtype, int rk, const void *in) {
+	MPI_Put(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
+}
+
+void active_rdma_base::do_accumulate_sync(opaque_handle dtype, int rk, const void *in) {
+	MPI_Accumulate(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), MPI_SUM, lift<MPI_Win>(p_));
+}
+
+//---------------------------------------------------------------------------------------
+// Passive RDMA.
+//---------------------------------------------------------------------------------------
 
 passive_rdma_base::passive_rdma_base()
 : p_{decay(MPI_WIN_NULL)}, size_{0}, mapping_{nullptr} { }

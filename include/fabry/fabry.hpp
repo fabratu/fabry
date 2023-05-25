@@ -48,6 +48,8 @@ static constexpr world_tag world;
 struct communicator {
 	friend void swap(communicator &x, communicator &y) {
 		std::swap(x.p_, y.p_);
+		std::swap(x.rank_, y.rank_);
+		std::swap(x.n_ranks_, y.n_ranks_);
 	}
 
 	communicator();
@@ -62,6 +64,8 @@ struct communicator {
 	: communicator() {
 		swap(*this, other);
 	}
+
+	explicit operator bool ();
 
 	communicator &operator= (communicator other) {
 		swap(*this, other);
@@ -137,11 +141,94 @@ struct communicator {
 		return {this, get_type<T>(), root.rk, n, in};
 	}
 
+	communicator split_shared(no_root_tag);
+	communicator split_color(no_root_tag, int color);
+	communicator split_color(no_root_tag);
+
 private:
 	opaque_handle p_;
 	int rank_;
 	int n_ranks_;
 };
+
+//---------------------------------------------------------------------------------------
+// Active RDMA.
+//---------------------------------------------------------------------------------------
+
+struct active_rdma_base {
+	friend void swap(active_rdma_base &x, active_rdma_base &y) {
+		std::swap(x.com_, y.com_);
+		std::swap(x.p_, y.p_);
+		std::swap(x.size_, y.size_);
+		std::swap(x.mapping_, y.mapping_);
+	}
+
+	active_rdma_base();
+
+	explicit active_rdma_base(no_root_tag, communicator &com, size_t unit, size_t size);
+
+	active_rdma_base(const active_rdma_base &) = delete;
+
+	active_rdma_base(active_rdma_base &&other)
+	: active_rdma_base() {
+		swap(*this, other);
+	}
+
+	~active_rdma_base();
+
+	active_rdma_base &operator= (active_rdma_base other) {
+		swap(*this, other);
+		return *this;
+	}
+
+public:
+	void pre_fence(no_root_tag);
+	void fence(no_root_tag);
+	void post_fence(no_root_tag);
+
+	void dispose(no_root_tag);
+
+protected:
+	void *raw_data() {
+		return mapping_;
+	}
+
+	void do_get_sync(opaque_handle dtype, int rk, void *out);
+	void do_put_sync(opaque_handle dtype, int rk, const void *in);
+	void do_accumulate_sync(opaque_handle dtype, int rk, const void *in);
+
+private:
+	communicator *com_;
+	opaque_handle p_;
+	size_t size_;
+	void *mapping_;
+};
+
+template<typename T>
+struct active_rdma_array : active_rdma_base {
+	explicit active_rdma_array(no_root_tag, communicator &com, size_t size)
+	: active_rdma_base{collective, com, sizeof(T), size} { }
+
+	T *data() {
+		return reinterpret_cast<T *>(raw_data());
+	}
+
+	void get_sync(int rk, T *out) {
+		do_get_sync(get_type<T>(), rk, out);
+	}
+
+	void put_sync(int rk, const T *in) {
+		do_put_sync(get_type<T>(), rk, in);
+	}
+
+	void accumulate_sync(int rk, const T *in) {
+		do_accumulate_sync(get_type<T>(), rk, in);
+	}
+};
+
+//---------------------------------------------------------------------------------------
+// Passive RDMA.
+//---------------------------------------------------------------------------------------
 
 struct passive_rdma_base {
 	friend struct passive_rdma_base_scope;
