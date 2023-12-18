@@ -19,6 +19,7 @@ target_compile_options(fabry PRIVATE ${CXX_FLAGS})
 
 # Find additional caching lib (non cmake, no pkg-config)
 if (USE_CACHE)
+        message("CLAMPI DIR: ${CLAMPI_PREFIX}")
         find_library(CLAMPI_LIBRARY
                 NAMES clampi libclampi
                 HINTS "${CLAMPI_PREFIX}/lib"
