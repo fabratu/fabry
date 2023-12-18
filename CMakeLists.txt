@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(fabry CXX)
 
+set(USE_CACHE "Use MPI-caching with CLaMPI." OFF)
+
 find_package(MPI REQUIRED)
 
 add_library(fabry SHARED lib/fabry.cpp)
@@ -14,6 +16,20 @@ target_include_directories(fabry PUBLIC "${PROJECT_SOURCE_DIR}/include" "${MPI_C
 target_link_libraries(fabry PRIVATE MPI::MPI_CXX)
 
 target_compile_options(fabry PRIVATE ${CXX_FLAGS})
+
+# Find additional caching lib (non cmake, no pkg-config)
+if (USE_CACHE)
+        find_library(CLAMPI_LIBRARY
+                NAMES clampi libclampi
+                HINTS "${CLAMPI_PREFIX}/lib"
+                REQUIRED
+        )
+        find_path(CLAMPI_INCLUDE_DIRS NAMES clampi.h PATHS "${CLAMPI_PREFIX}/include" REQUIRED)
+
+        target_include_directories(fabry PUBLIC "${CLAMPI_INCLUDE_DIRS}")
+
+        target_link_libraries(fabry PRIVATE ${CLAMPI_LIBRARY})
+endif()
 
 install(TARGETS fabry 
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
