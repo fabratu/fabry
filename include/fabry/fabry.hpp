@@ -204,6 +204,7 @@ private:
 	opaque_handle p_;
 	size_t size_;
 	void *mapping_;
+	CMPI_Win cWin;
 };
 
 template<typename T>
@@ -272,6 +273,7 @@ private:
 	opaque_handle p_;
 	size_t size_;
 	void *mapping_;
+	CMPI_Win cWin;
 };
 
 template<typename T>
