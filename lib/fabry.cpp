@@ -77,6 +77,7 @@ bool pollable::poll(opaque_handle h) {
 
 namespace internal {
 	void initialize_fabric(int *argcp, char ***argvp) {
+
 		MPI_Init(argcp, argvp);
 	}
 
@@ -168,8 +169,11 @@ active_rdma_base::active_rdma_base()
 
 active_rdma_base::active_rdma_base(no_root_tag, communicator &com, size_t unit, size_t size)
 : com_{&com}, size_{size} {
-	MPI_Win win;
-	MPI_Win_allocate(size * unit, unit, MPI_INFO_NULL,
+    MPI_Info info;
+    MPI_Info_create(&info);
+    MPI_Info_set(info, CLAMPI_MODE, CLAMPI_TRANSPARENT);
+	CMPI_Win win;
+	CMPI_Win_allocate(size * unit, unit, info,
 			lift<MPI_Comm>(com.get_handle()), &mapping_, &win);
 	p_ = decay(win);
 }
@@ -182,36 +186,36 @@ active_rdma_base::~active_rdma_base() {
 }
 
 void active_rdma_base::pre_fence(no_root_tag) {
-	MPI_Win_fence(MPI_MODE_NOPRECEDE, lift<MPI_Win>(p_));
+	MPI_Win_fence(MPI_MODE_NOPRECEDE, lift<CMPI_Win>(p_));
 }
 
 void active_rdma_base::fence(no_root_tag) {
-	MPI_Win_fence(0, lift<MPI_Win>(p_));
+	MPI_Win_fence(0, lift<CMPI_Win>(p_));
 }
 
 void active_rdma_base::post_fence(no_root_tag) {
-	MPI_Win_fence(MPI_MODE_NOSUCCEED, lift<MPI_Win>(p_));
+	MPI_Win_fence(MPI_MODE_NOSUCCEED, lift<CMPI_Win>(p_));
 }
 
 void active_rdma_base::dispose(no_root_tag) {
-	auto win = lift<MPI_Win>(p_);
-	MPI_Win_free(&win);
+	auto win = lift<CMPI_Win>(p_);
+	CMPI_Win_free(&win);
 	p_ = decay(MPI_WIN_NULL);
 }
 
 void active_rdma_base::do_get_sync(opaque_handle dtype, int rk, void *out) {
-	MPI_Get(out, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
+	CMPI_Get(out, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<CMPI_Win>(p_));
 }
 
 void active_rdma_base::do_put_sync(opaque_handle dtype, int rk, const void *in) {
-	MPI_Put(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
+	CMPI_Put(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<CMPI_Win>(p_));
 }
 
 void active_rdma_base::do_accumulate_sync(opaque_handle dtype, int rk, const void *in) {
 	MPI_Accumulate(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), MPI_SUM, lift<MPI_Win>(p_));
+			rk, 0, size_, lift<MPI_Datatype>(dtype), MPI_SUM, lift<CMPI_Win>(p_));
 }
 
 //---------------------------------------------------------------------------------------
@@ -223,8 +227,11 @@ passive_rdma_base::passive_rdma_base()
 
 passive_rdma_base::passive_rdma_base(no_root_tag, communicator &com, size_t unit, size_t size)
 : com_{&com}, size_{size} {
-	MPI_Win win;
-	MPI_Win_allocate(size * unit, unit, MPI_INFO_NULL,
+    MPI_Info info;
+    MPI_Info_create(&info);
+    MPI_Info_set(info, CLAMPI_MODE, CLAMPI_TRANSPARENT);
+	CMPI_Win win;
+	CMPI_Win_allocate(size * unit, unit, info,
 			lift<MPI_Comm>(com.get_handle()), &mapping_, &win);
 	p_ = decay(win);
 }
@@ -237,32 +244,32 @@ passive_rdma_base::~passive_rdma_base() {
 }
 
 void passive_rdma_base::dispose(no_root_tag) {
-	auto win = lift<MPI_Win>(p_);
-	MPI_Win_free(&win);
+	auto win = lift<CMPI_Win>(p_);
+	CMPI_Win_free(&win);
 	p_ = decay(MPI_WIN_NULL);
 }
 
 void passive_rdma_base::do_get_sync(opaque_handle dtype, int rk, void *out) {
-	MPI_Win_lock(MPI_LOCK_SHARED, rk, MPI_MODE_NOCHECK, lift<MPI_Win>(p_));
-	MPI_Get(out, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
-	MPI_Win_unlock(rk, lift<MPI_Win>(p_));
+	MPI_Win_lock(MPI_LOCK_SHARED, rk, MPI_MODE_NOCHECK, lift<CMPI_Win>(p_));
+	CMPI_Get(out, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<CMPI_Win>(p_));
+	MPI_Win_unlock(rk, lift<CMPI_Win>(p_));
 }
 
 void passive_rdma_base::do_put_sync(opaque_handle dtype, int rk, const void *in) {
-	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rk, MPI_MODE_NOCHECK, lift<MPI_Win>(p_));
-	MPI_Put(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<MPI_Win>(p_));
-	MPI_Win_unlock(rk, lift<MPI_Win>(p_));
+	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rk, MPI_MODE_NOCHECK, lift<CMPI_Win>(p_));
+	CMPI_Put(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), lift<CMPI_Win>(p_));
+	MPI_Win_unlock(rk, lift<CMPI_Win>(p_));
 }
 
 passive_rdma_base_scope::passive_rdma_base_scope(passive_rdma_base &r)
 : r_{&r} {
-	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, r_->com_->rank(), MPI_MODE_NOCHECK, lift<MPI_Win>(r_->p_));
+	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, r_->com_->rank(), MPI_MODE_NOCHECK, lift<CMPI_Win>(r_->p_));
 }
 
 passive_rdma_base_scope::~passive_rdma_base_scope() {
-	MPI_Win_unlock(r_->com_->rank(), lift<MPI_Win>(r_->p_));
+	MPI_Win_unlock(r_->com_->rank(), lift<CMPI_Win>(r_->p_));
 }
 
 } // namespace fabry

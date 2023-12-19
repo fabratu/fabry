@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <utility>
 
+#include <clampi.h>
+
 #include <fabry/internal-base.hpp>
 #include <fabry/internal-icb.hpp>
 
