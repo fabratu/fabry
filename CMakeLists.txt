@@ -30,7 +30,7 @@ if (FABRY_USE_CACHE)
         target_include_directories(fabry PUBLIC "${CLAMPI_INCLUDE_DIRS}")
 
         target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
-        set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib;${CLAMPI_PREFIX}/lib")
+        set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN;\\\$ORIGIN/lib;${CLAMPI_PREFIX}/lib")
         file(GLOB CLAMPI_LIBS ${CLAMPI_PREFIX}/lib/*.so*)
 endif()
 
