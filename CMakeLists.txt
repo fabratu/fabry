@@ -5,7 +5,7 @@ option(FABRY_USE_CACHE "Use MPI-caching with CLaMPI." OFF)
 
 find_package(MPI REQUIRED)
 
-add_library(fabry SHARED lib/fabry.cpp)
+add_library(fabry STATIC lib/fabry.cpp)
 
 list(APPEND CXX_FLAGS "-fpermissive")
 
