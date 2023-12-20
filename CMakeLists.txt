@@ -31,7 +31,7 @@ if (FABRY_USE_CACHE)
 
         target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
         set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib;${CLAMPI_PREFIX}/lib")
-        file(GLOB CLAMPI_LIBS ${CLAMPI_PREFIX}/*.so)
+        file(GLOB CLAMPI_LIBS ${CLAMPI_PREFIX}/lib/*.so)
 endif()
 
 list( APPEND CMAKE_INSTALL_RPATH "\\\$ORIGIN/lib")
