@@ -249,15 +249,15 @@ void passive_rdma_base::dispose(no_root_tag) {
 
 void passive_rdma_base::do_get_sync(opaque_handle dtype, int rk, void *out) {
 	MPI_Win_lock(MPI_LOCK_SHARED, rk, MPI_MODE_NOCHECK, cWin.win);
-	CMPI_Get(out, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin);
+	MPI_Get(out, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin.win);
 	MPI_Win_unlock(rk, cWin.win);
 }
 
 void passive_rdma_base::do_put_sync(opaque_handle dtype, int rk, const void *in) {
 	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rk, MPI_MODE_NOCHECK, cWin.win);
-	CMPI_Put(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin);
+	MPI_Put(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin.win);
 	MPI_Win_unlock(rk, cWin.win);
 }
 
