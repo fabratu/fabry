@@ -20,7 +20,6 @@ target_compile_options(fabry PRIVATE ${CXX_FLAGS})
 
 # Find additional caching lib (non cmake, no pkg-config)
 if (FABRY_USE_CACHE)
-        message("CLAMPI DIR: ${CLAMPI_PREFIX}")
         find_library(CLAMPI_LIBRARY
                 NAMES clampi libclampi
                 HINTS "${CLAMPI_PREFIX}/lib"
@@ -36,6 +35,9 @@ endif()
 install(TARGETS fabry 
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/fabry)
+
+install(FILES ${CLAMPI_INCLUDE_DIRS}/clampi.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(FILES ${CLAMPI_INCLUDE_DIRS}/mpi_wrapper.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 configure_file(fabry.pc "${PROJECT_BINARY_DIR}/fabry.pc" @ONLY)
 INSTALL(FILES ${PROJECT_BINARY_DIR}/fabry.pc DESTINATION "lib/pkgconfig")
