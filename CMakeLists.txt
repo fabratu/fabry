@@ -30,6 +30,7 @@ if (FABRY_USE_CACHE)
         target_include_directories(fabry PUBLIC "${CLAMPI_INCLUDE_DIRS}")
 
         target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
+        list( APPEND CMAKE_INSTALL_RPATH "${CLAMPI_PREFIX}/lib" )
 endif()
 
 install(TARGETS fabry 
