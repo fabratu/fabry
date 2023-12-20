@@ -30,7 +30,7 @@ if (FABRY_USE_CACHE)
 
         target_include_directories(fabry PUBLIC "${CLAMPI_INCLUDE_DIRS}")
 
-        target_link_libraries(fabry PRIVATE ${CLAMPI_LIBRARY})
+        target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
 endif()
 
 install(TARGETS fabry 
