@@ -203,18 +203,18 @@ void active_rdma_base::dispose(no_root_tag) {
 }
 
 void active_rdma_base::do_get_sync(opaque_handle dtype, int rk, void *out) {
-	CMPI_Get(out, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin);
+	MPI_Get(out, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin.win);
 }
 
 void active_rdma_base::do_put_sync(opaque_handle dtype, int rk, const void *in) {
-	CMPI_Put(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin);
+	MPI_Put(in, size_, lift<MPI_Datatype>(dtype),
+			rk, 0, size_, lift<MPI_Datatype>(dtype), cWin.win);
 }
 
 void active_rdma_base::do_accumulate_sync(opaque_handle dtype, int rk, const void *in) {
 	MPI_Accumulate(in, size_, lift<MPI_Datatype>(dtype),
-			rk, 0, size_, lift<MPI_Datatype>(dtype), MPI_SUM, cWin);
+			rk, 0, size_, lift<MPI_Datatype>(dtype), MPI_SUM, cWin.win);
 }
 
 //---------------------------------------------------------------------------------------
