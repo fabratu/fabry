@@ -5,7 +5,7 @@ option(FABRY_USE_CACHE "Use MPI-caching with CLaMPI." OFF)
 
 find_package(MPI REQUIRED)
 
-add_library(fabry STATIC lib/fabry.cpp)
+add_library(fabry SHARED lib/fabry.cpp)
 
 list(APPEND CXX_FLAGS "-fpermissive")
 
@@ -39,6 +39,8 @@ install(TARGETS fabry
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/fabry)
 
+# ToDo: make this more portable
+install(FILES ${CLAMPI_LIBRARY} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(FILES ${CLAMPI_INCLUDE_DIRS}/clampi.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 install(FILES ${CLAMPI_INCLUDE_DIRS}/mpi_wrapper.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
