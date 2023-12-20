@@ -31,6 +31,7 @@ if (FABRY_USE_CACHE)
 
         target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
         set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib;${CLAMPI_PREFIX}/lib")
+        file(GLOB CLAMPI_LIBS ${CLAMPI_PREFIX}/*.so)
 endif()
 
 list( APPEND CMAKE_INSTALL_RPATH "\\\$ORIGIN/lib")
@@ -40,7 +41,8 @@ install(TARGETS fabry
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/fabry)
 
 # ToDo: make this more portable
-install(FILES ${CLAMPI_LIBRARY} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
+install(FILES ${CLAMPI_LIBS} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(FILES ${CLAMPI_INCLUDE_DIRS}/clampi.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 install(FILES ${CLAMPI_INCLUDE_DIRS}/mpi_wrapper.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
