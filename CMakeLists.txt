@@ -10,7 +10,7 @@ add_library(fabry SHARED lib/fabry.cpp)
 list(APPEND CXX_FLAGS "-fpermissive")
 
 set_target_properties(fabry PROPERTIES PUBLIC_HEADER "include/fabry/fabry.hpp;include/fabry/internal-base.hpp;include/fabry/internal-icb.hpp")
-# set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib")
+set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib")
 
 target_include_directories(fabry PUBLIC "${PROJECT_SOURCE_DIR}/include" "${MPI_CXX_INCLUDE_DIRS}")
 
@@ -30,7 +30,7 @@ if (FABRY_USE_CACHE)
         target_include_directories(fabry PUBLIC "${CLAMPI_INCLUDE_DIRS}")
 
         target_link_libraries(fabry PUBLIC ${CLAMPI_LIBRARY})
-        list( APPEND CMAKE_INSTALL_RPATH "${CLAMPI_PREFIX}/lib")
+        set_target_properties(fabry PROPERTIES INSTALL_RPATH "\\\$ORIGIN/lib;${CLAMPI_PREFIX}/lib")
 endif()
 
 list( APPEND CMAKE_INSTALL_RPATH "\\\$ORIGIN/lib")
